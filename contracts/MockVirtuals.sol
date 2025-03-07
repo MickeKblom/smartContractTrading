@@ -28,7 +28,7 @@ contract MockVirtuals is Ownable {
 
     // Event for debugging
     event Debug(string message, uint256 value);
-
+ 
     function createToken(string memory name, string memory symbol, uint256 creatorAmount) external {
         require(virtualsTokenSet, "Virtuals token not set.");
         require(creatorAmount <= 1_000_000_000, "Cannot mint more than 1 billion tokens.");
@@ -94,6 +94,25 @@ contract MockVirtuals is Ownable {
         payable(msg.sender).transfer(ethToReceive);
 
         emit VirtualsSold(msg.sender, amount);
+    }
+// New functions for proxy interaction
+
+    function buy(uint256 amount, address token) external returns (bool) {
+        address bondingCurve = bondingCurves[token];
+        require(bondingCurve != address(0), "Bonding curve not found");
+
+        // Buy tokens for msg.sender
+        BondingCurve(bondingCurve).buy(amount, msg.sender);
+        return true;
+    }
+
+    function sell(uint256 amount, address token) external returns (bool) {
+        address bondingCurve = bondingCurves[token];
+        require(bondingCurve != address(0), "Bonding curve not found");
+
+        // Sell tokens and receive Virtuals
+        BondingCurve(bondingCurve).sell(amount, msg.sender);
+        return true;
     }
 
     // Fallback to accept ETH
